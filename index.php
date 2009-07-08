@@ -60,44 +60,12 @@ foreach ( array('wp_version', 'php_version', 'mysql_version') as $var ) {
 
 header('Content-Type: text/plain; Charset: UTF-8');
 
-db::connect('mysql');
-
-db::query("
-INSERT INTO api_logs (
-	log_date,
-	api_key,
-	site_ip,
-	site_url,
-	wp_version,
-	php_version,
-	mysql_version
-	)
-VALUES (
-	NOW(),
-	:api_key,
-	:site_ip,
-	:site_url,
-	:wp_version,
-	:php_version,
-	:mysql_version
-	);
-", compact(
-	'api_date',
-	'api_key',
-	'site_ip',
-	'site_url',
-	'wp_version',
-	'php_version',
-	'mysql_version'
-));
-
-db::disconnect();
-
-
 db::connect('pgsql');
 
 $dbs = db::query("
-	SELECT	profile_name,
+	SELECT	users.user_name,
+			users.user_email,
+			profile_name,
 			profile_key,
 			membership_expires
 	FROM	memberships
@@ -106,32 +74,38 @@ $dbs = db::query("
 	WHERE	user_key = :user_key
 	", array('user_key' => $api_key));
 
-$memberships = array();
+$details = array();
 
 while ( $row = $dbs->get_row() ) {
-	$name = $row->profile_name;
-	$key = str_replace('_', '-', $row->profile_key);
-	$expires = $row->membership_expires;
+	$user_name = $row->user_name;
+	$user_email = $row->user_email;
+	$profile_name = $row->profile_name;
+	$profile_key = str_replace('_', '-', $row->profile_key);
+	$profile_expires = $row->membership_expires;
 
-	if ( !$expires ) {
-		$expires = false;
+	if ( !$profile_expires ) {
+		$profile_expires = false;
 	} else {
-		$expires = date('Y-m-d', strtotime($expires));
+		$profile_expires = date('Y-m-d', strtotime($profile_expires));
 	}
 	
-	$memberships[$key] = array(
-		'name' => $name,
-		'expires' => $expires,
+	$details[$profile_key] = array(
+		'user_name' => $user_name,
+		'user_email' => $user_email,
+		'profile_name' => $profile_name,
+		'profile_expires' => $profile_expires,
 		);
 }
 
 db::disconnect();
 
 if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
-	echo serialize($memberships);
+	echo serialize($details);
 } else {
-	foreach ( $memberships as $key => $membership ) {
-		echo $key . ':' . $membership['expires'] . "\n";
+	foreach ( $details as $profile_key => $detail ) {
+		echo 'user_name:' . $detail['user_name'] . "\n";
+		echo 'user_email:' . $detail['user_email'] . "\n";
+		echo $profile_key . ':' . $detail['profile_expires'] . "\n";
 	}
 }
 
