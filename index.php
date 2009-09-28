@@ -1,4 +1,7 @@
 <?php
+status_header(400);
+die;
+
 define('path', dirname(__FILE__));
 
 if ( function_exists('date_default_timezone_set') )
