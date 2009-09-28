@@ -1,6 +1,9 @@
 <?php
 define('path', dirname(__FILE__));
 
+if ( function_exists('date_default_timezone_set') )
+	date_default_timezone_set('UTC');
+
 include path . '/config.php';
 include path . '/inc/utils.php';
 include path . '/inc/db.php';
