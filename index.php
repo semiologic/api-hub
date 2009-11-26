@@ -66,7 +66,7 @@ while ( $row = $dbs->get_row() ) {
 		'expires' => $expires,
 		);
 	
-	if ( $key == 'sem-pro' && $expires && time() > strtotime($expires) ) {
+	if ( $key == 'sem-pro' && $expires && time() <= strtotime($expires) ) {
 		$credits = 25;
 	}
 }
